@@ -34,8 +34,8 @@ TARGET_2ND_CPU_ABI2 := armeabi
 TARGET_2ND_CPU_VARIANT := generic
 TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a76
 
-BUILD_BROKEN_ENG_DEBUG_TAGS := true
 BUILD_BROKEN_DUP_RULES := true
+BUILD_BROKEN_USES_BUILD_COPY_HEADERS := true
 
 TARGET_BOARD_COMMON_PATH := device/google/sunfish/sm7150
 
@@ -77,6 +77,7 @@ AB_OTA_PARTITIONS += \
      vbmeta \
      dtbo \
      product \
+     system_ext \
      vbmeta_system
 
 # Partitions (listed in the file) to be wiped under recovery.
@@ -84,14 +85,11 @@ TARGET_RECOVERY_WIPE := device/google/sunfish/recovery.wipe
 TARGET_RECOVERY_FSTAB := device/google/sunfish/fstab.hardware
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_RECOVERY_UI_LIB := \
-    librecovery_ui_sunfish \
-    libnos_citadel_for_recovery \
-    libnos_for_recovery \
-    libbootloader_message \
+    librecovery_ui_pixel \
     libfstab
 
 # Enable chain partition for system.
-BOARD_AVB_VBMETA_SYSTEM := system
+BOARD_AVB_VBMETA_SYSTEM := system system_ext
 BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
 BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
@@ -99,6 +97,9 @@ BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 1
 
 # product.img
 BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
+
+# system_ext.img
+BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
 
 # userdata.img
 TARGET_USERIMAGES_USE_F2FS := true
@@ -121,15 +122,14 @@ include device/google/sunfish-sepolicy/sunfish-sepolicy.mk
 
 TARGET_FS_CONFIG_GEN := device/google/sunfish/config.fs
 
-BOARD_EXT4_SHARE_DUP_BLOCKS := true
-
 QCOM_BOARD_PLATFORMS += sm6150
 MSMSTEPPE = sm6150
-QC_PROP_ROOT := vendor/qcom/sm7150/proprietary
+QC_PROP_ROOT := vendor/qcom/sm8150/proprietary
 QC_PROP_PATH := $(QC_PROP_ROOT)
 BOARD_HAVE_BLUETOOTH_QCOM := true
 BOARD_HAVE_QCOM_FM := false
-BOARD_USE_QTI_BT_SAR := true
+TARGET_USE_QTI_BT_SAR := true
+TARGET_USE_QTI_BT_CHANNEL_AVOIDANCE := true
 BOARD_USES_COMMON_BLUETOOTH_HAL := true
 
 # Camera
@@ -153,6 +153,11 @@ TARGET_SUPPORT_DIRECT_REPORT := true
 # Enable sensor Version V_2
 USE_SENSOR_HAL_VER := 2.0
 
+# CHRE
+CHRE_DAEMON_ENABLED := true
+CHRE_DAEMON_LPMA_ENABLED := true
+CHRE_DAEMON_LOAD_INTO_SENSORSPD := true
+
 # wlan
 BOARD_WLAN_DEVICE := qcwcn
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
@@ -163,13 +168,15 @@ BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 WIFI_HIDL_FEATURE_AWARE := true
 WIFI_HIDL_FEATURE_DUAL_INTERFACE:= true
+WIFI_FEATURE_WIFI_EXT_HAL := true
+WIFI_FEATURE_IMU_DETECTION := true
+WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
 
 # Audio
 BOARD_USES_ALSA_AUDIO := true
 AUDIO_FEATURE_ENABLED_MULTI_VOICE_SESSIONS := true
 AUDIO_FEATURE_ENABLED_SND_MONITOR := true
 AUDIO_FEATURE_ENABLED_USB_TUNNEL := true
-AUDIO_FEATURE_ENABLED_CIRRUS_SPKR_PROTECTION := true
 BOARD_SUPPORTS_SOUND_TRIGGER := true
 AUDIO_FEATURE_FLICKER_SENSOR_INPUT := true
 AUDIO_FEATURE_ENABLED_MAXX_AUDIO := true
@@ -178,14 +185,12 @@ AUDIO_FEATURE_ENABLED_24BITS_CAMCORDER := true
 AUDIO_FEATURE_ENABLED_INSTANCE_ID := true
 #Cirrus cs35l41 speaker amp
 AUDIO_FEATURE_ENABLED_CS35L41 := true
+AUDIO_FEATURE_ENABLED_CS35L41_CALIBRATION_TOOL := true
 
 # Graphics
 TARGET_USES_GRALLOC1 := true
 TARGET_USES_HWC2 := true
 TARGET_USES_NV21_CAMERA_PREVIEW := true
-
-VSYNC_EVENT_PHASE_OFFSET_NS := 2000000
-SF_VSYNC_EVENT_PHASE_OFFSET_NS := 6000000
 
 # Display
 TARGET_HAS_WIDE_COLOR_DISPLAY := true
@@ -193,10 +198,6 @@ TARGET_HAS_HDR_DISPLAY := true
 TARGET_USES_DISPLAY_RENDER_INTENTS := true
 TARGET_USES_COLOR_METADATA := true
 TARGET_USES_DRM_PP := true
-
-# Misc
-TARGET_USES_HARDWARE_QCOM_BOOTCTRL := true
-
 
 # Vendor Interface Manifest
 DEVICE_MANIFEST_FILE := device/google/sunfish/manifest.xml
@@ -234,7 +235,8 @@ BOARD_SUPER_PARTITION_GROUPS := google_dynamic_partitions
 BOARD_GOOGLE_DYNAMIC_PARTITIONS_PARTITION_LIST := \
     system \
     vendor \
-    product
+    product \
+    system_ext
 
 #BOARD_GOOGLE_DYNAMIC_PARTITIONS_SIZE is set to BOARD_SUPER_PARTITION_SIZE / 2 - 4MB
 BOARD_GOOGLE_DYNAMIC_PARTITIONS_SIZE := 4873781248
